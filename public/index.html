@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Radha Electricals - Login</title>
+  <meta name="description" content="Radha Electricals Shop Management System - Login to manage billing, stock, and sales">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="login-page">
+    <!-- Background Animation -->
+    <div class="login-bg-animation">
+      <div class="circuit-line"></div>
+      <div class="circuit-line"></div>
+      <div class="circuit-line"></div>
+      <div class="circuit-line"></div>
+      <div class="circuit-line"></div>
+      <div class="glow-orb"></div>
+      <div class="glow-orb"></div>
+      <div class="glow-orb"></div>
+    </div>
+
+    <!-- Login Card -->
+    <div class="login-container">
+      <div class="login-card">
+        <div class="login-logo">
+          <div class="logo-icon">⚡</div>
+          <h1>Radha Electricals</h1>
+          <p>Shop Management System</p>
+        </div>
+
+        <form id="loginForm" autocomplete="off">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <div class="form-input-icon">
+              <span class="icon">👤</span>
+              <input type="text" id="username" class="form-input" placeholder="Enter your username" required autofocus>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="form-input-icon">
+              <span class="icon">🔒</span>
+              <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
+            </div>
+          </div>
+
+          <div id="loginError" style="color: var(--danger); font-size: 0.8125rem; margin-bottom: 12px; display: none;"></div>
+
+          <button type="submit" class="btn btn-primary btn-full btn-lg" id="loginBtn">
+            Sign In
+          </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 24px; color: var(--text-muted); font-size: 0.75rem;">
+          <p>🔐 Authorized Personnel Only</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+</body>
+</html>

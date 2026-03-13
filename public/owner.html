@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Owner Dashboard - Radha Electricals</title>
+  <meta name="description" content="Owner Dashboard - Sales analytics, staff management, and shop overview">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-sm">⚡</div>
+        <div>
+          <h2>Radha Electricals</h2>
+          <small>Owner Panel</small>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section">Main</div>
+        <div class="nav-item active" data-section="overview">
+          <span class="nav-icon">📊</span> Overview
+        </div>
+        <div class="nav-item" data-section="sales">
+          <span class="nav-icon">💰</span> Sales Analytics
+        </div>
+
+        <div class="nav-section">Management</div>
+        <div class="nav-item" data-section="staff">
+          <span class="nav-icon">👥</span> Staff Management
+        </div>
+        <div class="nav-item" data-section="stock-alerts">
+          <span class="nav-icon">🔔</span> Stock Alerts <span class="badge" id="alertBadge" style="display:none">0</span>
+        </div>
+        <div class="nav-item" data-section="expenses">
+          <span class="nav-icon">💸</span> Expenses
+        </div>
+
+        <div class="nav-section">Reports</div>
+        <div class="nav-item" data-section="bills">
+          <span class="nav-icon">🧾</span> All Bills
+        </div>
+        <div class="nav-item" data-section="products">
+          <span class="nav-icon">📦</span> All Products
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="userAvatar">O</div>
+          <div class="user-details">
+            <div class="user-name" id="userName">Owner</div>
+            <div class="user-role" id="userRole">owner</div>
+          </div>
+          <button class="logout-btn" onclick="logout()" title="Logout">🚪</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+
+      <!-- Overview Section -->
+      <section class="section active" id="sec-overview">
+        <div class="page-header">
+          <div>
+            <h1>📊 Dashboard Overview</h1>
+            <p>Welcome back! Here's your shop summary</p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div class="notification-wrapper">
+              <button class="notification-bell" onclick="toggleNotifications()" id="notifBellBtn" title="Notifications">
+                🔔
+                <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+              </button>
+              <div class="notification-panel" id="notifPanel">
+                <div class="notif-header">
+                  <span>⚠️ Low Stock Alerts</span>
+                  <span id="notifCount" style="color:var(--text-muted); font-size:0.75rem;">0 items</span>
+                </div>
+                <div class="notif-list" id="notifList">
+                  <div class="empty-state" style="padding:24px;"><p>No alerts</p></div>
+                </div>
+              </div>
+            </div>
+            <div style="color: var(--text-muted); font-size: 0.875rem;" id="currentDate"></div>
+          </div>
+        </div>
+
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card blue">
+            <div class="stat-icon">💰</div>
+            <div class="stat-value" id="statTodaySales">₹0</div>
+            <div class="stat-label">Today's Sales</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon">📅</div>
+            <div class="stat-value" id="statMonthSales">₹0</div>
+            <div class="stat-label">Monthly Sales</div>
+          </div>
+          <div class="stat-card yellow">
+            <div class="stat-icon">🧾</div>
+            <div class="stat-value" id="statTodayBills">0</div>
+            <div class="stat-label">Today's Bills</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-icon">⚠️</div>
+            <div class="stat-value" id="statLowStock">0</div>
+            <div class="stat-label">Low Stock Items</div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-icon">📦</div>
+            <div class="stat-value" id="statProducts">0</div>
+            <div class="stat-label">Total Products</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon">👥</div>
+            <div class="stat-value" id="statStaff">0</div>
+            <div class="stat-label">Staff Members</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <h3>📈 Sales Trend (7 Days)</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas id="salesChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>🏆 Top Selling Products</h3>
+            </div>
+            <div class="card-body">
+              <div class="table-wrapper">
+                <table>
+                  <thead><tr><th>Product</th><th>Sold</th><th>Revenue</th></tr></thead>
+                  <tbody id="topProductsList"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>🕐 Recent Bills</h3>
+          </div>
+          <div class="card-body">
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Bill #</th><th>Customer</th><th>Amount</th><th>Payment</th><th>Staff</th><th>Date</th></tr></thead>
+                <tbody id="recentBillsList"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sales Analytics Section -->
+      <section class="section" id="sec-sales">
+        <div class="page-header">
+          <div>
+            <h1>💰 Sales Analytics</h1>
+            <p>Detailed sales reports and charts</p>
+          </div>
+          <div class="toolbar">
+            <button class="btn btn-ghost btn-sm" onclick="loadSalesChart('week')">Week</button>
+            <button class="btn btn-primary btn-sm" onclick="loadSalesChart('month')">Month</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadSalesChart('year')">Year</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>📈 Sales Chart</h3></div>
+          <div class="card-body">
+            <div class="chart-container" style="height: 350px;">
+              <canvas id="salesChartFull"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>📋 Daily Summary</h3>
+            <input type="date" class="form-input" style="width: auto;" id="summaryDate" onchange="loadDailySummary()">
+          </div>
+          <div class="card-body">
+            <div class="stats-grid" id="dailySummaryStats">
+              <div class="stat-card blue"><div class="stat-value" id="dsTotalSales">₹0</div><div class="stat-label">Total Sales</div></div>
+              <div class="stat-card green"><div class="stat-value" id="dsCashSales">₹0</div><div class="stat-label">Cash</div></div>
+              <div class="stat-card yellow"><div class="stat-value" id="dsUpiSales">₹0</div><div class="stat-label">UPI</div></div>
+              <div class="stat-card purple"><div class="stat-value" id="dsCardSales">₹0</div><div class="stat-label">Card</div></div>
+              <div class="stat-card red"><div class="stat-value" id="dsTotalBills">0</div><div class="stat-label">Bills</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Staff Management Section -->
+      <section class="section" id="sec-staff">
+        <div class="page-header">
+          <div>
+            <h1>👥 Staff Management</h1>
+            <p>Add, edit and manage staff accounts</p>
+          </div>
+          <button class="btn btn-primary" onclick="openStaffModal()">+ Add Staff</button>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Phone</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+                <tbody id="staffList"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stock Alerts Section -->
+      <section class="section" id="sec-stock-alerts">
+        <div class="page-header">
+          <div>
+            <h1>🔔 Low Stock Alerts</h1>
+            <p>Products running low and need restocking</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body" id="lowStockList">
+            <div class="empty-state">
+              <div class="empty-icon">✅</div>
+              <h4>All products are well stocked</h4>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Expenses Section -->
+      <section class="section" id="sec-expenses">
+        <div class="page-header">
+          <div>
+            <h1>💸 Expenses</h1>
+            <p>Track shop expenses</p>
+          </div>
+          <button class="btn btn-primary" onclick="openExpenseModal()">+ Add Expense</button>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card yellow">
+            <div class="stat-icon">💸</div>
+            <div class="stat-value" id="totalExpenses">₹0</div>
+            <div class="stat-label">This Month's Expenses</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Title</th><th>Amount</th><th>Category</th><th>Date</th><th>Actions</th></tr></thead>
+                <tbody id="expensesList"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- All Bills Section -->
+      <section class="section" id="sec-bills">
+        <div class="page-header">
+          <div>
+            <h1>🧾 All Bills</h1>
+            <p>Complete bill history</p>
+          </div>
+          <div class="toolbar">
+            <div class="search-input">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="billSearch" placeholder="Search bills..." onkeyup="searchBills()">
+            </div>
+            <input type="date" class="form-input" style="width: auto;" id="billDateFrom" onchange="searchBills()">
+            <input type="date" class="form-input" style="width: auto;" id="billDateTo" onchange="searchBills()">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Bill #</th><th>Customer</th><th>Items</th><th>Amount</th><th>Payment</th><th>Staff</th><th>Date</th><th>Actions</th></tr></thead>
+                <tbody id="allBillsList"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- All Products Section -->
+      <section class="section" id="sec-products">
+        <div class="page-header">
+          <div>
+            <h1>📦 All Products</h1>
+            <p>Product inventory overview</p>
+          </div>
+          <div class="toolbar">
+            <div class="search-input">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="ownerProductSearch" placeholder="Search products..." onkeyup="ownerSearchProducts()">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Buy Price</th><th>Sell Price</th><th>Stock</th><th>Status</th></tr></thead>
+                <tbody id="ownerProductsList"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Staff Modal -->
+  <div class="modal-overlay" id="staffModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="staffModalTitle">Add Staff</h3>
+        <button class="modal-close" onclick="closeModal('staffModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="staffForm">
+          <input type="hidden" id="staffId">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" class="form-input" id="staffName" required placeholder="Enter full name">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Username</label>
+              <input type="text" class="form-input" id="staffUsername" required placeholder="Login username">
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" class="form-input" id="staffPassword" placeholder="Login password">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Role</label>
+              <select class="form-input" id="staffRole">
+                <option value="staff">Staff</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="text" class="form-input" id="staffPhone" placeholder="Phone number">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('staffModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveStaff()">Save Staff</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expense Modal -->
+  <div class="modal-overlay" id="expenseModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Add Expense</h3>
+        <button class="modal-close" onclick="closeModal('expenseModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="expenseForm">
+          <div class="form-group">
+            <label>Title</label>
+            <input type="text" class="form-input" id="expTitle" required placeholder="Expense description">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Amount (₹)</label>
+              <input type="number" class="form-input" id="expAmount" required placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <select class="form-input" id="expCategory">
+                <option value="Rent">Rent</option>
+                <option value="Electricity">Electricity</option>
+                <option value="Salary">Salary</option>
+                <option value="Transport">Transport</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" class="form-input" id="expDate">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('expenseModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveExpense()">Save Expense</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bill Detail Modal -->
+  <div class="modal-overlay" id="billDetailModal">
+    <div class="modal" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3>🧾 Bill Details</h3>
+        <button class="modal-close" onclick="closeModal('billDetailModal')">&times;</button>
+      </div>
+      <div class="modal-body" id="billDetailContent"></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('billDetailModal')">Close</button>
+        <button class="btn btn-primary" id="printBillBtn">🖨️ Print Bill</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/owner.js"></script>
+</body>
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Dashboard - Radha Electricals</title>
+  <meta name="description" content="Staff Dashboard - Billing, stock management, and daily operations">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-sm">⚡</div>
+        <div>
+          <h2>Radha Electricals</h2>
+          <small>Staff Panel</small>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section">Sales</div>
+        <div class="nav-item active" data-section="billing">
+          <span class="nav-icon">🧾</span> New Bill
+        </div>
+        <div class="nav-item" data-section="bill-history">
+          <span class="nav-icon">📋</span> Bill History
+        </div>
+
+        <div class="nav-section">Inventory</div>
+        <div class="nav-item" data-section="products">
+          <span class="nav-icon">📦</span> Products
+        </div>
+        <div class="nav-item" data-section="categories">
+          <span class="nav-icon">🏷️</span> Categories
+        </div>
+
+        <div class="nav-section">Customers</div>
+        <div class="nav-item" data-section="customers">
+          <span class="nav-icon">👥</span> Customers
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="userAvatar">S</div>
+          <div class="user-details">
+            <div class="user-name" id="userName">Staff</div>
+            <div class="user-role" id="userRole">staff</div>
+          </div>
+          <button class="logout-btn" onclick="logout()" title="Logout">🚪</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+
+      <!-- Billing Section -->
+      <section class="section active" id="sec-billing">
+        <div class="page-header">
+          <div>
+            <h1>🧾 New Bill</h1>
+            <p>Create a new bill for your customer</p>
+          </div>
+        </div>
+
+        <div class="billing-layout">
+          <!-- Left: Product Search & Cart -->
+          <div>
+            <!-- Product Search -->
+            <div class="card">
+              <div class="card-header"><h3>🔍 Search Products</h3></div>
+              <div class="card-body">
+                <div style="position: relative;">
+                  <input type="text" class="form-input" id="productSearchInput" placeholder="Search by name or code..." autocomplete="off">
+                  <div class="product-search-results" id="searchResults"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cart -->
+            <div class="card">
+              <div class="card-header">
+                <h3>🛒 Cart Items (<span id="cartCount">0</span>)</h3>
+                <button class="btn btn-ghost btn-sm" onclick="clearCart()">Clear All</button>
+              </div>
+              <div class="card-body">
+                <div id="cartItems">
+                  <div class="empty-state">
+                    <div class="empty-icon">🛒</div>
+                    <h4>Cart is empty</h4>
+                    <p>Search and add products above</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Bill Summary -->
+          <div>
+            <!-- Customer Info -->
+            <div class="card">
+              <div class="card-header"><h3>👤 Customer</h3></div>
+              <div class="card-body">
+                <div class="form-group">
+                  <input type="text" class="form-input" id="custName" placeholder="Customer name (optional)">
+                </div>
+                <div class="form-group">
+                  <input type="text" class="form-input" id="custPhone" placeholder="Phone number (optional)">
+                </div>
+              </div>
+            </div>
+
+            <!-- Bill Summary -->
+            <div class="card">
+              <div class="card-header"><h3>💰 Bill Summary</h3></div>
+              <div class="card-body">
+                <div class="bill-summary">
+                  <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span id="billSubtotal">₹0.00</span>
+                  </div>
+                  <div class="summary-row">
+                    <span>Discount (₹)</span>
+                    <input type="number" class="form-input" id="billDiscount" value="0" min="0" style="width:100px; padding:6px 10px; text-align:right;" onchange="updateBillTotal()">
+                  </div>
+                  <div class="summary-row">
+                    <span>GST (%)</span>
+                    <input type="number" class="form-input" id="billGst" value="0" min="0" max="28" style="width:80px; padding:6px 10px; text-align:right;" onchange="updateBillTotal()">
+                  </div>
+                  <div class="summary-row" id="gstAmountRow" style="display:none;">
+                    <span>GST Amount</span>
+                    <span id="billGstAmount">₹0.00</span>
+                  </div>
+                  <div class="summary-row total">
+                    <span>Total</span>
+                    <span id="billTotal">₹0.00</span>
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 16px;">
+                  <label>Payment Method</label>
+                  <div class="payment-methods">
+                    <div class="payment-method active" data-method="cash" onclick="selectPayment(this)">💵 Cash</div>
+                    <div class="payment-method" data-method="upi" onclick="selectPayment(this)">📱 UPI</div>
+                    <div class="payment-method" data-method="card" onclick="selectPayment(this)">💳 Card</div>
+                  </div>
+                </div>
+
+                <button class="btn btn-success btn-full btn-lg" style="margin-top: 16px;" onclick="generateBill()" id="generateBillBtn">
+                  🧾 Generate Bill
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bill History Section -->
+      <section class="section" id="sec-bill-history">
+        <div class="page-header">
+          <div>
+            <h1>📋 Bill History</h1>
+            <p>View and reprint past bills</p>
+          </div>
+          <div class="toolbar">
+            <div class="search-input">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="staffBillSearch" placeholder="Search bills..." onkeyup="staffSearchBills()">
+            </div>
+            <input type="date" class="form-input" style="width: auto;" id="staffBillDate" onchange="staffSearchBills()">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Bill #</th><th>Customer</th><th>Amount</th><th>Payment</th><th>Date</th><th>Actions</th></tr></thead>
+                <tbody id="staffBillsList"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Products Section -->
+      <section class="section" id="sec-products">
+        <div class="page-header">
+          <div>
+            <h1>📦 Products / Stock</h1>
+            <p>Manage your product inventory</p>
+          </div>
+          <div class="toolbar">
+            <div class="search-input">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="staffProductSearch" placeholder="Search products..." onkeyup="staffSearchProducts()">
+            </div>
+            <button class="btn btn-primary" onclick="openProductModal()">+ Add Product</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Buy ₹</th><th>Sell ₹</th><th>Stock</th><th>Unit</th><th>Actions</th></tr></thead>
+                <tbody id="staffProductsList"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Categories Section -->
+      <section class="section" id="sec-categories">
+        <div class="page-header">
+          <div>
+            <h1>🏷️ Categories</h1>
+            <p>Manage product categories</p>
+          </div>
+          <button class="btn btn-primary" onclick="openCategoryModal()">+ Add Category</button>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>ID</th><th>Category Name</th><th>Actions</th></tr></thead>
+                <tbody id="categoriesList"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Customers Section -->
+      <section class="section" id="sec-customers">
+        <div class="page-header">
+          <div>
+            <h1>👥 Customers</h1>
+            <p>Manage customer records</p>
+          </div>
+          <button class="btn btn-primary" onclick="openCustomerModal()">+ Add Customer</button>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Name</th><th>Phone</th><th>City</th><th>Address</th><th>Since</th><th>Actions</th></tr></thead>
+                <tbody id="customersList"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Product Modal -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="productModalTitle">Add Product</h3>
+        <button class="modal-close" onclick="closeModal('productModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="productForm">
+          <input type="hidden" id="prodId">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Product Name *</label>
+              <input type="text" class="form-input" id="prodName" required placeholder="Product name">
+            </div>
+            <div class="form-group">
+              <label>Product Code</label>
+              <input type="text" class="form-input" id="prodCode" placeholder="e.g. HW15R">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select class="form-input" id="prodCategory"></select>
+          </div>
+          <div class="form-row-3">
+            <div class="form-group">
+              <label>Purchase Price *</label>
+              <input type="number" class="form-input" id="prodPurchasePrice" required placeholder="0" step="0.01">
+            </div>
+            <div class="form-group">
+              <label>Selling Price *</label>
+              <input type="number" class="form-input" id="prodSellingPrice" required placeholder="0" step="0.01">
+            </div>
+            <div class="form-group">
+              <label>Quantity</label>
+              <input type="number" class="form-input" id="prodQuantity" value="0" min="0">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Unit</label>
+              <select class="form-input" id="prodUnit">
+                <option value="pcs">Pieces (pcs)</option>
+                <option value="coil">Coil</option>
+                <option value="meter">Meter</option>
+                <option value="box">Box</option>
+                <option value="kg">Kilogram</option>
+                <option value="set">Set</option>
+                <option value="pair">Pair</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Min Stock Alert</label>
+              <input type="number" class="form-input" id="prodMinStock" value="10" min="0">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('productModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Modal -->
+  <div class="modal-overlay" id="categoryModal">
+    <div class="modal" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3>Add Category</h3>
+        <button class="modal-close" onclick="closeModal('categoryModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Category Name</label>
+          <input type="text" class="form-input" id="catName" placeholder="Enter category name">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('categoryModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveCategory()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Modal -->
+  <div class="modal-overlay" id="customerModal">
+    <div class="modal" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 id="customerModalTitle">Add Customer</h3>
+        <button class="modal-close" onclick="closeModal('customerModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="customerForm">
+          <input type="hidden" id="customerId">
+          <div class="form-group">
+            <label>Customer Name *</label>
+            <input type="text" class="form-input" id="customerName" required placeholder="Full name">
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="text" class="form-input" id="customerPhone" placeholder="Phone number">
+          </div>
+          <div class="form-group">
+            <label>City</label>
+            <input type="text" class="form-input" id="customerCity" placeholder="City name">
+          </div>
+          <div class="form-group">
+            <label>Address</label>
+            <textarea class="form-input" id="customerAddress" placeholder="Address"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('customerModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveCustomer()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bill Detail Modal -->
+  <div class="modal-overlay" id="billDetailModal">
+    <div class="modal" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3>🧾 Bill Details</h3>
+        <button class="modal-close" onclick="closeModal('billDetailModal')">&times;</button>
+      </div>
+      <div class="modal-body" id="billDetailContent"></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('billDetailModal')">Close</button>
+        <button class="btn btn-primary" id="printBillBtn">🖨️ Print Bill</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/staff.js"></script>
+</body>
+</html>

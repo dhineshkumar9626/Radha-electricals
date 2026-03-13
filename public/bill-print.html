@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bill Print</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #fff;
+      color: #000;
+      padding: 0;
+    }
+
+    .bill-container {
+      max-width: 80mm;
+      margin: 0 auto;
+      padding: 12px;
+    }
+
+    .shop-header {
+      text-align: center;
+      margin-bottom: 12px;
+      border-bottom: 2px solid #000;
+      padding-bottom: 8px;
+    }
+
+    .shop-name {
+      font-size: 18px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .shop-info {
+      font-size: 10px;
+      color: #333;
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    .bill-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      margin-bottom: 8px;
+      padding: 6px 0;
+      border-bottom: 1px dashed #999;
+    }
+
+    .bill-meta .left { text-align: left; }
+    .bill-meta .right { text-align: right; }
+
+    .bill-meta strong {
+      font-size: 11px;
+    }
+
+    .customer-info {
+      font-size: 10px;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px dashed #999;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 8px;
+    }
+
+    th {
+      text-align: left;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 4px 2px;
+      border-bottom: 1px solid #000;
+      border-top: 1px solid #000;
+    }
+
+    th:last-child, td:last-child {
+      text-align: right;
+    }
+
+    td {
+      font-size: 10px;
+      padding: 4px 2px;
+      border-bottom: 1px dashed #ddd;
+      vertical-align: top;
+    }
+
+    .item-name {
+      font-weight: 500;
+    }
+
+    .item-code {
+      font-size: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #666;
+    }
+
+    .totals {
+      border-top: 1px solid #000;
+      padding-top: 6px;
+      margin-bottom: 12px;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      padding: 2px 0;
+    }
+
+    .total-row.grand {
+      font-size: 14px;
+      font-weight: 800;
+      border-top: 2px solid #000;
+      padding-top: 6px;
+      margin-top: 4px;
+    }
+
+    .bill-footer {
+      text-align: center;
+      font-size: 9px;
+      color: #555;
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 1px dashed #999;
+      line-height: 1.5;
+    }
+
+    .bill-footer .thanks {
+      font-size: 12px;
+      font-weight: 700;
+      color: #000;
+      margin-bottom: 4px;
+    }
+
+    .no-print-section {
+      text-align: center;
+      padding: 16px;
+      margin-top: 20px;
+    }
+
+    @media print {
+      .no-print-section { display: none !important; }
+      body { padding: 0; }
+      .bill-container { margin: 0; }
+    }
+
+    .print-btn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 4px;
+    }
+
+    .close-btn {
+      background: #64748b;
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="bill-container" id="billContent">
+    <div style="text-align:center; padding: 40px; color: #999;">Loading bill...</div>
+  </div>
+
+  <div class="no-print-section">
+    <button class="print-btn" onclick="window.print()">🖨️ Print Bill</button>
+    <button class="close-btn" onclick="window.close()">Close</button>
+  </div>
+
+  <script>
+    const API_BASE = '/api';
+
+    function getToken() {
+      return localStorage.getItem('token');
+    }
+
+    function formatCurrency(amount) {
+      return '₹' + Number(amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    async function loadBill() {
+      const pathParts = window.location.pathname.split('/');
+      const billId = pathParts[pathParts.length - 1];
+
+      try {
+        // Get shop info
+        const shopRes = await fetch('/api/shop-info');
+        const shop = await shopRes.json();
+
+        // Get bill details
+        const billRes = await fetch(`${API_BASE}/bills/${billId}`, {
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        const data = await billRes.json();
+        const b = data.bill;
+        const items = data.items;
+
+        const billDate = new Date(b.created_at);
+        const dateStr = billDate.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const timeStr = billDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+        document.getElementById('billContent').innerHTML = `
+          <div class="shop-header">
+            <div class="shop-name">${shop.name || 'Radha Electricals'}</div>
+            <div class="shop-info">
+              ${shop.address ? shop.address + '<br>' : ''}
+              ${shop.phone ? 'Ph: ' + shop.phone : ''}
+              ${shop.gst ? '<br>GST: ' + shop.gst : ''}
+            </div>
+          </div>
+
+          <div class="bill-meta">
+            <div class="left">
+              <strong>Bill: ${b.bill_number}</strong><br>
+              Date: ${dateStr}
+            </div>
+            <div class="right">
+              Time: ${timeStr}<br>
+              ${b.payment_method.toUpperCase()}
+            </div>
+          </div>
+
+          <div class="customer-info">
+            Customer: <strong>${b.customer_name || 'Walk-in Customer'}</strong>
+            ${b.customer_phone ? '<br>Phone: ' + b.customer_phone : ''}
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width:10%">#</th>
+                <th>Item</th>
+                <th style="width:12%">Qty</th>
+                <th style="width:18%">Rate</th>
+                <th style="width:20%">Amt</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map((item, i) => `
+                <tr>
+                  <td>${i + 1}</td>
+                  <td>
+                    <div class="item-name">${item.product_name}</div>
+                    ${item.product_code ? `<div class="item-code">${item.product_code}</div>` : ''}
+                  </td>
+                  <td>${item.quantity}</td>
+                  <td>${formatCurrency(item.unit_price)}</td>
+                  <td>${formatCurrency(item.total)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="totals">
+            <div class="total-row">
+              <span>Subtotal:</span>
+              <span>${formatCurrency(b.subtotal)}</span>
+            </div>
+            ${b.discount > 0 ? `
+              <div class="total-row">
+                <span>Discount:</span>
+                <span>-${formatCurrency(b.discount)}</span>
+              </div>
+            ` : ''}
+            ${b.gst_percent > 0 ? `
+              <div class="total-row">
+                <span>GST (${b.gst_percent}%):</span>
+                <span>${formatCurrency(b.gst_amount)}</span>
+              </div>
+            ` : ''}
+            <div class="total-row grand">
+              <span>TOTAL:</span>
+              <span>${formatCurrency(b.total)}</span>
+            </div>
+          </div>
+
+          <div class="bill-footer">
+            <div class="thanks">Thank You! Visit Again ⚡</div>
+            <div>Items are not returnable/exchangeable without bill</div>
+            <div>Staff: ${b.staff_name || '-'}</div>
+          </div>
+        `;
+
+        // Auto-print
+        setTimeout(() => window.print(), 500);
+      } catch (err) {
+        document.getElementById('billContent').innerHTML = `
+          <div style="text-align:center; padding: 40px; color: red;">
+            <h3>Error loading bill</h3>
+            <p>${err.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    loadBill();
+  </script>
+</body>
+</html>
